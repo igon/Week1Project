@@ -1,0 +1,12 @@
+import chainlit as cl
+
+@cl.on_message
+async def on_message(message: cl.Message):
+    # Your custom logic goes here...
+
+    #send a response back to the user
+    await cl.Message(
+        content=f"Received: {message.content}",
+    ).send()
+
+    
