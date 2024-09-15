@@ -18,6 +18,10 @@ model_kwargs = {
 
 @cl.on_message
 async def on_message(message: cl.Message):
+    # Maintain an array of messages to send to the LLM
+    message_history = cl.user_session.get("message_history", [])
+    message_history.append({"role": "user", "content": message.content})
+
     response_message = cl.Message(
         content="",
     )
@@ -26,9 +30,7 @@ async def on_message(message: cl.Message):
     # https://platform.openai.com/docs/guides/chat-completions/response-forma
     stream = await client.chat.completions.create(
         **model_kwargs,
-        messages=[
-            {"role": "user", "content": message.content},
-        ],
+        messages= message_history,
         stream=True,
     )
     
@@ -37,4 +39,8 @@ async def on_message(message: cl.Message):
         if chunk := chunk.choices[0].delta.content or "":
             await response_message.stream_token(chunk)
 
-    await response_message.send()
+    await response_message.update()
+
+    # Add the LLM response to the message history
+    message_history.append({"role": "assistant", "content": response_message.content})
+    cl.user_session.set("message_history", message_history)
