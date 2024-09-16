@@ -19,22 +19,21 @@ def prompt_compliance_evaluator(run: Run, example: Example) -> dict:
     inputs = example.inputs['input']
     outputs = example.outputs['output']
 
-    #Extract system prompt
-    system_prompt = next((msg['data']['content'] for msg in inputs if msg['type'] == 'system'), "")
+    # Handle inputs
+    if isinstance(inputs, str):
+        system_prompt = inputs
+        message_history = []
+        latest_message = ""
+    else:
+        system_prompt = next((msg['data']['content'] for msg in inputs if msg['type'] == 'system'), "")
+        message_history = [
+            {'role': "user" if msg['type'] == 'human' else 'assistant', 'content': msg['data']['content']}
+            for msg in inputs if msg['type'] in ['human', 'ai']
+        ]
+        latest_message = message_history[-1]['content'] if message_history else ""
 
-    
-    #Extract message history 
-    message_history = []
-    for msg in inputs:
-        if msg['type'] in ['human', 'ai']:
-            message_history.append({
-                'role': "user" if msg['type'] == 'human' else 'assistant',
-                'content': msg['data']['content']
-            })
-
-    #Extract latest user message and model output
-    latest_message = message_history[-1]['content'] if message_history else ""
-    model_output = outputs['data']['content']
+    # Handle outputs
+    model_output = outputs if isinstance(outputs, str) else outputs.get('data', {}).get('content', '')
 
     evaluation_prompt = f"""
     System Prompt: {system_prompt}
@@ -58,7 +57,7 @@ def prompt_compliance_evaluator(run: Run, example: Example) -> dict:
     """
 
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are an AI assistant tasked with evaluating the compliance of model outputs to given prompts and conversation context."},
             {"role": "user", "content": evaluation_prompt}
@@ -83,7 +82,7 @@ def prompt_compliance_evaluator(run: Run, example: Example) -> dict:
 data = "Week1Project"
 
 #A Strin to prefix the experiment name with. 
-experiment_prefix = "Portuguese-Compliance"
+experiment_prefix = "Portuguese-Compliance-Eval2"
 
 #List of evaluators to score the outputs of target task 
 evaluators = [
@@ -97,7 +96,5 @@ results = evaluate(
     evaluators=evaluators,
     experiment_prefix=experiment_prefix,
 )
-
-
 
 

@@ -85,7 +85,7 @@ experiment_results = evaluate(
     answer_translate_question,
     data=dataset_name,
     evaluators=qa_evaluator,
-    experiment_prefix="text-drbx-qa-oai",
+    experiment_prefix="Portuguese-Compliance-Eval1",
     metadata={
         "variant": "stuff website context into gpt-4o"
     },
