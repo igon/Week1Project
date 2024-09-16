@@ -3,7 +3,9 @@ import openai
 import os
 from prompts import SYSTEM_PROMPT
 from langsmith.wrappers import wrap_openai
+from langsmith import traceable
 from dotenv import load_dotenv
+
 
 load_dotenv()
 
@@ -23,7 +25,7 @@ model_kwargs = {
 
 ENABLE_SYSTEM_PROMPT = True
 
-
+@traceable
 @cl.on_message
 async def on_message(message: cl.Message):
     # Maintain an array of messages to send to the LLM
@@ -46,6 +48,7 @@ async def on_message(message: cl.Message):
     response_message = cl.Message(
     content="", 
     )
+
 
     # https://platform.openai.com/docs/guides/chat-completions/response-format
     async for chunk in stream:
